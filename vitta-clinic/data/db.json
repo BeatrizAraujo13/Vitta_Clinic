@@ -1,0 +1,13 @@
+{
+  "users": [
+    { "id": "user-admin", "name": "Marina Costa", "email": "admin@vitta.com", "role": "Administrador" },
+    { "id": "user-doctor", "name": "Dr. Rafael Mendes", "email": "medico@vitta.com", "role": "Médico" },
+    { "id": "user-reception", "name": "Camila Rocha", "email": "recepcao@vitta.com", "role": "Recepcionista" }
+  ],
+  "specialties": [],
+  "doctors": [],
+  "patients": [],
+  "appointments": [],
+  "records": [],
+  "_note": "A demonstração popula dados fictícios em localStorage por meio de js/seed.js. Este arquivo documenta o formato, sem credenciais."
+}
