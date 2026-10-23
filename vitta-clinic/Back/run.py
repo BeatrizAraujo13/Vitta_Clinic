@@ -1,9 +1,0 @@
-"""Entry point for Flask CLI and the local development server."""
-
-from app import create_app
-
-app = create_app()
-
-
-if __name__ == "__main__":
-    app.run()

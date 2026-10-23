@@ -1,19 +1,19 @@
-"""SQLAlchemy model exports."""
+"""Exportações dos modelos SQLAlchemy."""
 
-from app.models.appointment import Appointment, AppointmentStatus
-from app.models.doctor import Doctor
-from app.models.patient import Patient
-from app.models.record import MedicalRecord
-from app.models.specialty import Specialty
-from app.models.user import User, UserRole
+from app.models.consulta import Consulta, StatusConsulta
+from app.models.medico import Medico
+from app.models.paciente import Paciente
+from app.models.prontuario import Prontuario
+from app.models.especialidade import Especialidade
+from app.models.usuario import Usuario, PerfilUsuario
 
 __all__ = [
-    "Appointment",
-    "AppointmentStatus",
-    "Doctor",
-    "MedicalRecord",
-    "Patient",
-    "Specialty",
-    "User",
-    "UserRole",
+    "Consulta",
+    "StatusConsulta",
+    "Medico",
+    "Prontuario",
+    "Paciente",
+    "Especialidade",
+    "Usuario",
+    "PerfilUsuario",
 ]

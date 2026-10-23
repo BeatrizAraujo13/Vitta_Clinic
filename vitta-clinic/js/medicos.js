@@ -1,10 +1,10 @@
-/* CRUD e filtro de profissionais por especialidade. */
+/* Operações de médicos e filtro de profissionais por especialidade. */
 (function () {
   window.VittaModules = window.VittaModules || {};
   window.VittaModules.initMedicos = function () {
     const writable = window.VittaAuth.can("medicos", "write");
     let specialtyFilter = "";
-    const render = () => {
+    const renderizar = () => {
       const card = window.Vitta.tableFrame({
         title: "Médicos",
         description: "Gerencie os profissionais e suas especialidades.",
@@ -14,10 +14,10 @@
       const specialties = window.VittaStorage.all("specialties");
       const filter = document.createElement("select");
       filter.setAttribute("aria-label", "Filtrar por especialidade");
-      filter.innerHTML = `<option value="">Todas especialidades</option>${specialties.map((item) => `<option value="${window.Vitta.escape(item.id)}">${window.Vitta.escape(item.name)}</option>`).join("")}`;
+      filter.innerHTML = `<option value="">Todas especialidades</option>${specialties.map((item) => `<option value="${window.Vitta.escaparHtml(item.id)}">${window.Vitta.escaparHtml(item.name)}</option>`).join("")}`;
       filter.value = specialtyFilter;
       card.querySelector("[data-extra-filters]").appendChild(filter);
-      filter.addEventListener("change", () => { specialtyFilter = filter.value; render(); });
+      filter.addEventListener("change", () => { specialtyFilter = filter.value; renderizar(); });
       const rows = window.VittaStorage.all("doctors").filter((item) => !specialtyFilter || item.specialtyId === specialtyFilter).map((doctor) => {
         const specialty = specialties.find((item) => item.id === doctor.specialtyId);
         return { ...doctor, specialtyName: specialty ? specialty.name : "Sem especialidade", searchText: `${doctor.name} ${doctor.crm} ${doctor.email || ""} ${specialty ? specialty.name : ""}` };
@@ -25,26 +25,26 @@
       window.Vitta.table({
         container: card,
         columns: [
-          { label: "Médico", render: (row) => `<span class="table-primary">${window.Vitta.escape(row.name)}</span><span class="table-secondary">${window.Vitta.escape(row.crm)}</span>` },
-          { label: "Especialidade", render: (row) => window.Vitta.escape(row.specialtyName) },
-          { label: "Contato", render: (row) => `<span>${window.Vitta.escape(row.email || "—")}</span><span class="table-secondary">${window.Vitta.escape(row.phone || "")}</span>` },
-          { label: "Atendimento", render: (row) => window.Vitta.escape(row.schedule || "—") }
+          { label: "Médico", renderizar: (row) => `<span class="table-primary">${window.Vitta.escaparHtml(row.name)}</span><span class="table-secondary">${window.Vitta.escaparHtml(row.crm)}</span>` },
+          { label: "Especialidade", renderizar: (row) => window.Vitta.escaparHtml(row.specialtyName) },
+          { label: "Contato", renderizar: (row) => `<span>${window.Vitta.escaparHtml(row.email || "—")}</span><span class="table-secondary">${window.Vitta.escaparHtml(row.phone || "")}</span>` },
+          { label: "Atendimento", renderizar: (row) => window.Vitta.escaparHtml(row.schedule || "—") }
         ],
         rows,
-        actions: writable ? (row) => `<button type="button" class="button button-secondary button-small" data-edit="${window.Vitta.escape(row.id)}">Editar</button><button type="button" class="button button-danger button-small" data-delete="${window.Vitta.escape(row.id)}">Excluir</button>` : null
+        actions: writable ? (row) => `<button type="button" class="button button-secondary button-small" data-edit="${window.Vitta.escaparHtml(row.id)}">Editar</button><button type="button" class="button button-danger button-small" data-delete="${window.Vitta.escaparHtml(row.id)}">Excluir</button>` : null
       });
       if (writable) {
-        document.querySelector("[data-add]").addEventListener("click", () => editDoctor());
-        card.querySelectorAll("[data-edit]").forEach((button) => button.addEventListener("click", () => editDoctor(window.VittaStorage.all("doctors").find((item) => item.id === button.dataset.edit))));
+        document.querySelector("[data-add]").addEventListener("click", () => editarMedico());
+        card.querySelectorAll("[data-edit]").forEach((button) => button.addEventListener("click", () => editarMedico(window.VittaStorage.all("doctors").find((item) => item.id === button.dataset.edit))));
         card.querySelectorAll("[data-delete]").forEach((button) => button.addEventListener("click", () => {
           const doctor = window.VittaStorage.all("doctors").find((item) => item.id === button.dataset.delete);
           const linked = window.VittaStorage.all("appointments").some((item) => item.doctorId === doctor.id) || window.VittaStorage.all("records").some((item) => item.doctorId === doctor.id);
           if (linked) { window.Vitta.toast("Não é possível excluir: há consultas ou prontuários vinculados.", "error"); return; }
-          window.Vitta.confirm({ title: "Excluir médico?", message: `Deseja excluir ${doctor.name}?`, onConfirm: () => { window.VittaStorage.remove("doctors", doctor.id); window.Vitta.toast("Médico excluído."); render(); } });
+          window.Vitta.confirm({ title: "Excluir médico?", message: `Deseja excluir ${doctor.name}?`, onConfirm: () => window.VittaStorage.remove("doctors", doctor.id).then(() => { window.Vitta.toast("Médico excluído."); renderizar(); }) });
         }));
       }
     };
-    function editDoctor(doctor) {
+    function editarMedico(doctor) {
       if (!window.VittaStorage.all("specialties").length) { window.Vitta.toast("Cadastre uma especialidade antes de incluir médicos.", "error"); return; }
       window.Vitta.modal({
         title: doctor ? "Editar médico" : "Novo médico", values: doctor,
@@ -59,12 +59,13 @@
         onSubmit: (form) => {
           const duplicate = window.VittaStorage.all("doctors").some((item) => item.crm.toLowerCase() === form.crm.trim().toLowerCase() && item.id !== (doctor && doctor.id));
           if (duplicate) { window.Vitta.toast("Já existe um médico cadastrado com este CRM.", "error"); return false; }
-          window.VittaStorage.save("doctors", { ...(doctor || {}), ...form, name: form.name.trim(), crm: form.crm.trim(), id: doctor ? doctor.id : window.Vitta.id("med") });
-          window.Vitta.toast(doctor ? "Cadastro atualizado." : "Médico cadastrado.");
-          render();
+          return window.VittaStorage.save("doctors", { ...(doctor || {}), ...form, name: form.name.trim(), crm: form.crm.trim(), id: doctor ? doctor.id : window.Vitta.id("med") }).then(() => {
+            window.Vitta.toast(doctor ? "Cadastro atualizado." : "Médico cadastrado.");
+            renderizar();
+          });
         }
       });
     }
-    render();
+    renderizar();
   };
 })();

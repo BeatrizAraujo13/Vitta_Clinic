@@ -1,12 +1,25 @@
 # Vitta Clinic
 
-Sistema demonstrativo de gestão de clínica feito somente com HTML5, CSS3 e JavaScript vanilla. Não requer instalação, servidor, frameworks ou bibliotecas externas.
+Sistema de gestão de clínica com interface em HTML, CSS e JavaScript e API REST em Flask. Um único comando inicia o site e a API juntos.
 
 ## Como executar
 
-1. Extraia a pasta `vitta-clinic` mantendo a estrutura de arquivos.
-2. Abra `index.html` diretamente em um navegador atualizado.
-3. Entre com uma das contas de demonstração abaixo. Os registros ficam salvos no `localStorage` do navegador usado.
+Abra o PowerShell na pasta `vitta-clinic`. Na primeira execução, entre em `Back`, crie o ambiente e instale as dependências:
+
+```powershell
+cd Back
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Depois, na mesma pasta `Back`, inicie tudo com:
+
+```powershell
+.\.venv\Scripts\python.exe executar.py
+```
+
+O próprio `executar.py` aplica as migrações, cria os dados iniciais se necessário e inicia o site e a API juntos. Abra `http://127.0.0.1:5000` no navegador e mantenha o terminal aberto.
 
 ### Credenciais de demonstração
 
@@ -16,14 +29,14 @@ Sistema demonstrativo de gestão de clínica feito somente com HTML5, CSS3 e Jav
 | Médico | `medico@vitta.com` | `123456` |
 | Recepcionista | `recepcao@vitta.com` | `123456` |
 
-Use o botão **Sair** para encerrar a sessão. Para reiniciar os registros demonstrativos, remova os itens `vitta-clinic-db-v1` e `vitta-clinic-session-v1` do armazenamento local do site no navegador e recarregue a página.
+Use o botão **Sair** para encerrar a sessão. Os dados da clínica ficam no banco SQLite do backend; a sessão de acesso fica no armazenamento local do navegador.
 
 ## Funcionalidades
 
 - Sessão persistente, login e navegação conforme o perfil.
 - Dashboard com indicadores, próximas consultas e gráfico mensal.
 - Cadastro, edição, busca, paginação e exclusão confirmada de pacientes, médicos, especialidades e consultas.
-- Formatação do CPF sem validar dígitos verificadores, unicidade de CPF/CRM e validação de data de agendamento.
+- Validação de CPF e CRM, prevenção de duplicidades e validação de datas de agendamento.
 - Prontuários vinculados a paciente e consulta, com histórico cronológico; gravação disponível para médicos e administradores.
 - Relatórios de consultas por período, consultas por médico e pacientes cadastrados, com impressão.
 - Layout responsivo, etiquetas acessíveis, estados vazios e notificações.
@@ -33,16 +46,16 @@ Use o botão **Sair** para encerrar a sessão. Para reiniciar os registros demon
 ```text
 vitta-clinic/
 ├── index.html
-├── Back/        # API Flask separada (instruções em Back/README.md)
+├── Back/        # API Flask (instruções em Back/README.md)
 ├── pages/       # Dashboard e módulos da aplicação
-├── css/         # Reset, tokens, estilos compartilhados e responsividade
-├── js/          # Autenticação, persistência, seed, utilitários e módulos
+├── css/         # Normalização, variáveis, estilos compartilhados e responsividade
+├── js/          # Acesso à API, autenticação, utilitários e módulos
 ├── assets/      # Logo e recursos visuais
-└── data/        # Exemplo de estrutura do banco (db.json)
+└── data/        # Exemplo de estrutura do banco (banco.json)
 ```
 
-O backend REST opcional fica em [Back/README.md](./Back/README.md). O front-end permanece em modo demonstrativo com `localStorage`; conectá-lo à API exige trocar a camada de persistência do navegador por chamadas HTTP autenticadas.
+Mais detalhes de instalação, contas e rotas estão em [Back/README.md](./Back/README.md).
 
 ## Observação de segurança
 
-Esta aplicação é exclusivamente uma demonstração front-end. A autenticação, os perfis e os dados são simulados no navegador e podem ser inspecionados ou alterados pelo usuário. Não utilize credenciais reais, dados pessoais de pacientes nem informações clínicas reais. Um sistema de produção requer backend, controles de acesso no servidor, criptografia, auditoria e conformidade com a legislação aplicável.
+Esta aplicação é demonstrativa. As credenciais listadas são públicas e destinam-se somente ao banco de teste; não utilize dados pessoais ou informações clínicas reais. Um sistema de produção requer segredos exclusivos, HTTPS, controles de acesso, auditoria, backups e conformidade com a legislação aplicável.

@@ -1,1 +1,1 @@
-"""Marshmallow request schemas."""
+"""Esquemas de requisição do Marshmallow."""

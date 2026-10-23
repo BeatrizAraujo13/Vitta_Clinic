@@ -1,6 +1,6 @@
 # Vitta Clinic API
 
-Backend REST em Flask organizado com application factory, blueprints versionados, modelos SQLAlchemy, schemas Marshmallow e regras de negócio na camada `services`.
+Backend REST em Flask organizado com fábrica da aplicação, blueprints versionados, modelos SQLAlchemy, esquemas Marshmallow e regras de negócio na camada `services`.
 
 ## Requisitos e início rápido (Windows PowerShell)
 
@@ -8,18 +8,15 @@ Requer Python 3.11 ou superior.
 
 ```powershell
 cd Back
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env
-flask --app run.py db upgrade
-flask --app run.py seed
-flask --app run.py run --debug
+py -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+.\.venv\Scripts\python.exe executar.py
 ```
 
-A API fica disponível em `http://127.0.0.1:5000`; o health check é `GET /health`. O banco padrão é SQLite em `instance/vitta_clinic.db`. O comando `flask seed` também cria as tabelas caso ainda não existam e não duplica uma base que já tenha usuários.
+O script aplica as migrações pendentes, cria dados de demonstração se o banco estiver vazio e inicia o site e a API em `http://127.0.0.1:5000`. A interface e a API usam o mesmo endereço; o health check é `GET /health`. O banco padrão é SQLite em `instance/vitta_clinic.db`.
 
-Na primeira instalação, use somente `flask --app run.py db upgrade`; a migração inicial já está incluída. Para reinicializar os dados de desenvolvimento, pare o servidor e remova `instance/vitta_clinic.db`; depois rode novamente `flask --app run.py db upgrade` e `flask --app run.py seed`. Não reutilize as chaves de `.env.example` em produção.
+Para reinicializar os dados de desenvolvimento, pare o servidor e remova `instance/vitta_clinic.db`; ao iniciar novamente, as migrações serão aplicadas e os dados de demonstração serão criados outra vez. Não reutilize as chaves de `.env.example` em produção.
 
 ## Contas de demonstração
 
@@ -29,7 +26,7 @@ Na primeira instalação, use somente `flask --app run.py db upgrade`; a migraç
 | Médico | `medico@vitta.com` | `123456` |
 | Recepcionista | `recepcao@vitta.com` | `123456` |
 
-O seed inclui ainda 3 especialidades, 3 médicos, 5 pacientes, 5 consultas (uma realizada e quatro futuras) e 1 prontuário.
+O seed inclui ainda 3 especialidades, 3 médicos, 5 pacientes, 5 consultas e 1 prontuário.
 
 ## Autenticação e cURL
 
@@ -129,7 +126,7 @@ Listagens aceitam filtros: pacientes `search`; médicos `search` e `specialty_id
 python -m pytest -q
 ```
 
-Os testes usam SQLite em memória e cobrem autenticação/perfis, CPF, soft delete, datas e conflitos da agenda, e as regras de prontuário. Para aplicar alterações de modelo após o início do projeto, execute `flask --app run.py db migrate -m "Descrição"` e `flask --app run.py db upgrade`.
+Os testes usam SQLite em memória e cobrem autenticação/perfis, CPF, soft delete, datas e conflitos da agenda, e as regras de prontuário. Para aplicar alterações de modelo após o início do projeto, execute `flask --app executar.py db migrate -m "Descrição"` e `flask --app executar.py db upgrade`.
 
 ## Estrutura de pastas
 
@@ -137,18 +134,32 @@ Os testes usam SQLite em memória e cobrem autenticação/perfis, CPF, soft dele
 Back/
 ├── app/
 │   ├── models/       # Entidades e relacionamentos SQLAlchemy
+│   │   ├── consulta.py
+│   │   ├── especialidade.py
+│   │   ├── medico.py
+│   │   ├── paciente.py
+│   │   ├── prontuario.py
+│   │   └── usuario.py
 │   ├── routes/       # Blueprints REST /api/v1
+│   │   ├── autenticacao.py
+│   │   ├── consultas.py
+│   │   ├── especialidades.py
+│   │   ├── medicos.py
+│   │   ├── pacientes.py
+│   │   ├── prontuarios.py
+│   │   ├── relatorios.py
+│   │   └── usuarios.py
 │   ├── schemas/      # Validação e parsing Marshmallow
 │   ├── services/     # Regras de negócio e persistência
 │   ├── utils/        # JWT, validações e erros HTTP
-│   ├── config.py
-│   ├── extensions.py
-│   └── seed.py
+│   ├── configuracao.py
+│   ├── dados_iniciais.py
+│   └── extensoes.py
 ├── migrations/     # Migração inicial versionada (Flask-Migrate/Alembic)
 ├── tests/
 ├── .env.example
 ├── requirements.txt
-└── run.py
+└── executar.py
 ```
 
 Este backend é uma base demonstrativa. Para produção, use segredos exclusivos, HTTPS, controle de acesso operacional, backups, logs de auditoria e políticas de privacidade compatíveis com dados de saúde.

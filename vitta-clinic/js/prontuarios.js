@@ -1,10 +1,10 @@
-/* Histórico clínico em linha do tempo; escrita restrita a médicos e administradores. */
+/* Histórico clínico em linha do tempo; edição restrita a médicos e administradores. */
 (function () {
   window.VittaModules = window.VittaModules || {};
   window.VittaModules.initProntuarios = function () {
     const writable = window.VittaAuth.can("prontuarios", "write");
     let patientFilter = "";
-    const render = () => {
+    const renderizar = () => {
       const card = window.Vitta.tableFrame({
         title: "Prontuários eletrônicos",
         description: "Histórico clínico organizado por paciente e consulta.",
@@ -14,10 +14,10 @@
       const patients = window.VittaStorage.all("patients");
       const filter = document.createElement("select");
       filter.setAttribute("aria-label", "Filtrar histórico por paciente");
-      filter.innerHTML = `<option value="">Todos os pacientes</option>${patients.map((item) => `<option value="${window.Vitta.escape(item.id)}">${window.Vitta.escape(item.name)}</option>`).join("")}`;
+      filter.innerHTML = `<option value="">Todos os pacientes</option>${patients.map((item) => `<option value="${window.Vitta.escaparHtml(item.id)}">${window.Vitta.escaparHtml(item.name)}</option>`).join("")}`;
       filter.value = patientFilter;
       card.querySelector("[data-extra-filters]").appendChild(filter);
-      filter.addEventListener("change", () => { patientFilter = filter.value; render(); });
+      filter.addEventListener("change", () => { patientFilter = filter.value; renderizar(); });
       const rows = window.VittaStorage.all("records")
         .filter((item) => !patientFilter || item.patientId === patientFilter)
         .sort((a, b) => b.date.localeCompare(a.date))
@@ -30,26 +30,26 @@
       window.Vitta.table({
         container: card,
         columns: [
-          { label: "Data", render: (row) => `<span class="table-primary">${window.Vitta.date(row.date)}</span>` },
-          { label: "Paciente / consulta", render: (row) => `<span class="table-primary">${window.Vitta.escape(row.patientName)}</span><span class="table-secondary">Consulta: ${window.Vitta.escape(row.appointmentDate)}</span>` },
-          { label: "Médico", render: (row) => window.Vitta.escape(row.doctorName) },
-          { label: "Queixa / diagnóstico", render: (row) => `<span>${window.Vitta.escape(row.complaint)}</span><span class="table-secondary">${window.Vitta.escape(row.diagnosis)}</span>` },
-          { label: "Prescrição", render: (row) => window.Vitta.escape(row.prescription || "—") }
+          { label: "Data", renderizar: (row) => `<span class="table-primary">${window.Vitta.date(row.date)}</span>` },
+          { label: "Paciente / consulta", renderizar: (row) => `<span class="table-primary">${window.Vitta.escaparHtml(row.patientName)}</span><span class="table-secondary">Consulta: ${window.Vitta.escaparHtml(row.appointmentDate)}</span>` },
+          { label: "Médico", renderizar: (row) => window.Vitta.escaparHtml(row.doctorName) },
+          { label: "Queixa / diagnóstico", renderizar: (row) => `<span>${window.Vitta.escaparHtml(row.complaint)}</span><span class="table-secondary">${window.Vitta.escaparHtml(row.diagnosis)}</span>` },
+          { label: "Prescrição", renderizar: (row) => window.Vitta.escaparHtml(row.prescription || "—") }
         ],
         rows,
-        actions: writable ? (row) => `<button type="button" class="button button-secondary button-small" data-edit="${window.Vitta.escape(row.id)}">Editar</button><button type="button" class="button button-danger button-small" data-delete="${window.Vitta.escape(row.id)}">Excluir</button>` : null,
+        actions: writable ? (row) => `<button type="button" class="button button-secondary button-small" data-edit="${window.Vitta.escaparHtml(row.id)}">Editar</button><button type="button" class="button button-danger button-small" data-delete="${window.Vitta.escaparHtml(row.id)}">Excluir</button>` : null,
         emptyText: "Nenhum prontuário registrado para este paciente."
       });
       if (writable) {
-        document.querySelector("[data-add]").addEventListener("click", () => editRecord());
-        card.querySelectorAll("[data-edit]").forEach((button) => button.addEventListener("click", () => editRecord(window.VittaStorage.all("records").find((item) => item.id === button.dataset.edit))));
+        document.querySelector("[data-add]").addEventListener("click", () => editarProntuario());
+        card.querySelectorAll("[data-edit]").forEach((button) => button.addEventListener("click", () => editarProntuario(window.VittaStorage.all("records").find((item) => item.id === button.dataset.edit))));
         card.querySelectorAll("[data-delete]").forEach((button) => button.addEventListener("click", () => {
           const record = window.VittaStorage.all("records").find((item) => item.id === button.dataset.delete);
-          window.Vitta.confirm({ title: "Excluir prontuário?", message: "Deseja excluir este registro clínico? Esta ação não pode ser desfeita.", onConfirm: () => { window.VittaStorage.remove("records", record.id); window.Vitta.toast("Prontuário excluído."); render(); } });
+          window.Vitta.confirm({ title: "Excluir prontuário?", message: "Deseja excluir este registro clínico? Esta ação não pode ser desfeita.", onConfirm: () => window.VittaStorage.remove("records", record.id).then(() => { window.Vitta.toast("Prontuário excluído."); renderizar(); }) });
         }));
       }
     };
-    function editRecord(record) {
+    function editarProntuario(record) {
       const patients = window.VittaStorage.all("patients");
       const appointments = window.VittaStorage.all("appointments");
       const doctors = window.VittaStorage.all("doctors");
@@ -59,7 +59,7 @@
         title: record ? "Editar prontuário" : "Novo prontuário",
         values,
         fields: [
-          { name: "patientId", label: "Paciente", type: "select", required: true, options: () => patients.map((item) => ({ value: item.id, label: item.name })), onChange: (input, form) => updateAppointments(input.value, form) },
+          { name: "patientId", label: "Paciente", type: "select", required: true, options: () => patients.map((item) => ({ value: item.id, label: item.name })), onChange: (input, form) => atualizarConsultas(input.value, form) },
           { name: "appointmentId", label: "Consulta", type: "select", required: true, options: () => appointments.filter((item) => !record || item.patientId === record.patientId).map((item) => ({ value: item.id, label: `${window.Vitta.date(item.date)} às ${item.time}` })), onChange: (input, form) => {
             const appointment = appointments.find((item) => item.id === input.value);
             if (appointment) form.elements.doctorId.value = appointment.doctorId;
@@ -75,12 +75,13 @@
           const appointment = appointments.find((item) => item.id === form.appointmentId);
           if (!appointment || appointment.patientId !== form.patientId) { window.Vitta.toast("Selecione uma consulta vinculada ao paciente escolhido.", "error"); return false; }
           if (appointment.doctorId !== form.doctorId) { window.Vitta.toast("O médico responsável deve corresponder ao médico da consulta.", "error"); return false; }
-          window.VittaStorage.save("records", { ...(record || {}), ...form, id: record ? record.id : window.Vitta.id("pront") });
-          window.Vitta.toast(record ? "Prontuário atualizado." : "Prontuário criado.");
-          render();
+          return window.VittaStorage.save("records", { ...(record || {}), ...form, id: record ? record.id : window.Vitta.id("pront") }).then(() => {
+            window.Vitta.toast(record ? "Prontuário atualizado." : "Prontuário criado.");
+            renderizar();
+          });
         }
       });
-      function updateAppointments(patientId, form) {
+      function atualizarConsultas(patientId, form) {
         const select = form.elements.appointmentId;
         const previous = select.value;
         select.replaceChildren(new Option("Selecione", ""));
@@ -90,6 +91,6 @@
         if (selected) form.elements.doctorId.value = selected.doctorId;
       }
     }
-    render();
+    renderizar();
   };
 })();

@@ -1,1 +1,1 @@
-"""Business logic layer."""
+"""Camada de lógica de negócio."""
