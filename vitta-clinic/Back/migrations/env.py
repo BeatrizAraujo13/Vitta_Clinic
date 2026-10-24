@@ -5,101 +5,94 @@ from flask import current_app
 
 from alembic import context
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Este é o objeto de configuração do Alembic, que fornece
+# acesso aos valores do arquivo .ini em uso.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# Interpreta o arquivo de configuração do registro de eventos do Python.
+# Esta linha configura os registradores.
 fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
 
 
-def get_engine():
+def obter_mecanismo():
     try:
-        # this works with Flask-SQLAlchemy<3 and Alchemical
+        # Compatível com Flask-SQLAlchemy anterior à versão 3 e Alchemical.
         return current_app.extensions['migrate'].db.get_engine()
     except (TypeError, AttributeError):
-        # this works with Flask-SQLAlchemy>=3
+        # Compatível com Flask-SQLAlchemy 3 ou superior.
         return current_app.extensions['migrate'].db.engine
 
 
-def get_engine_url():
+def obter_url_mecanismo():
     try:
-        return get_engine().url.render_as_string(hide_password=False).replace(
+        return obter_mecanismo().url.render_as_string(hide_password=False).replace(
             '%', '%%')
     except AttributeError:
-        return str(get_engine().url).replace('%', '%%')
+        return str(obter_mecanismo().url).replace('%', '%%')
 
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-config.set_main_option('sqlalchemy.url', get_engine_url())
+# Adicione aqui o objeto MetaData dos modelos para gerar migrações automaticamente.
+# from meu_app import meu_modelo
+# target_metadata = meu_modelo.BaseDeclarativa.metadata
+config.set_main_option('sqlalchemy.url', obter_url_mecanismo())
 target_db = current_app.extensions['migrate'].db
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+# Outros valores de configuração necessários podem ser obtidos assim:
+# minha_opcao = config.get_main_option("minha_opcao")
+# ...
 
 
-def get_metadata():
+def obter_metadados():
     if hasattr(target_db, 'metadatas'):
         return target_db.metadatas[None]
     return target_db.metadata
 
 
-def run_migrations_offline():
-    """Run migrations in 'offline' mode.
+def executar_migracoes_desconectadas():
+    """Executa migrações no modo desconectado.
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
+    Configura o contexto apenas com uma URL, sem mecanismo de banco.
+    Ao não criar o mecanismo, não é necessário ter uma DBAPI disponível.
 
-    Calls to context.execute() here emit the given string to the
-    script output.
+    As chamadas a context.execute() emitem a instrução para a saída do script.
 
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=get_metadata(), literal_binds=True
+        url=url, target_metadata=obter_metadados(), literal_binds=True
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-def run_migrations_online():
-    """Run migrations in 'online' mode.
+def executar_migracoes_conectadas():
+    """Executa migrações no modo conectado.
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
+    Neste modo, cria um mecanismo de banco e associa uma conexão ao contexto.
 
     """
 
-    # this callback is used to prevent an auto-migration from being generated
-    # when there are no changes to the schema
-    # reference: http://alembic.zzzcomputing.com/en/latest/cookbook.html
-    def process_revision_directives(context, revision, directives):
+    # Evita gerar uma migração automática quando não há mudanças no esquema.
+    # Referência: https://alembic.sqlalchemy.org/en/latest/cookbook.html
+    def processar_diretivas_de_revisao(context, revision, directives):
         if getattr(config.cmd_opts, 'autogenerate', False):
             script = directives[0]
             if script.upgrade_ops.is_empty():
                 directives[:] = []
-                logger.info('No changes in schema detected.')
+                logger.info('Nenhuma alteração de esquema detectada.')
 
     conf_args = current_app.extensions['migrate'].configure_args
     if conf_args.get("process_revision_directives") is None:
-        conf_args["process_revision_directives"] = process_revision_directives
+        conf_args["process_revision_directives"] = processar_diretivas_de_revisao
 
-    connectable = get_engine()
+    connectable = obter_mecanismo()
 
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=get_metadata(),
+            target_metadata=obter_metadados(),
             **conf_args
         )
 
@@ -108,6 +101,6 @@ def run_migrations_online():
 
 
 if context.is_offline_mode():
-    run_migrations_offline()
+    executar_migracoes_desconectadas()
 else:
-    run_migrations_online()
+    executar_migracoes_conectadas()

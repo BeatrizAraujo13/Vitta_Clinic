@@ -4,6 +4,7 @@ Flask-Migrate>=4,<5
 Flask-JWT-Extended>=4.7,<5
 Flask-Cors>=5,<6
 Flask-Bcrypt>=1,<2
+cryptography>=42,<47
 marshmallow>=3.20,<5
 python-dotenv>=1,<2
 pytest>=8,<9

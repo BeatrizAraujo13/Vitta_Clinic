@@ -1,9 +1,9 @@
-/* CRUD de pacientes com busca, validação de CPF e prevenção de duplicidades. */
+/* Operações de pacientes com busca, validação de CPF e prevenção de duplicidades. */
 (function () {
   window.VittaModules = window.VittaModules || {};
   window.VittaModules.initPacientes = function () {
     const writable = window.VittaAuth.can("pacientes", "write");
-    const render = () => {
+    const renderizar = () => {
       const card = window.Vitta.tableFrame({
         title: "Pacientes",
         description: "Consulte e mantenha os dados dos pacientes da clínica.",
@@ -17,32 +17,33 @@
       window.Vitta.table({
         container: card,
         columns: [
-          { label: "Paciente", render: (row) => `<span class="table-primary">${window.Vitta.escape(row.name)}</span><span class="table-secondary">${window.Vitta.escape(row.email || "Sem e-mail")}</span>` },
-          { label: "CPF", render: (row) => window.Vitta.escape(row.cpf) },
-          { label: "Telefone", render: (row) => window.Vitta.escape(row.phone || "—") },
-          { label: "Convênio", render: (row) => window.Vitta.escape(row.insurance || "—") }
+          { label: "Paciente", renderizar: (row) => `<span class="table-primary">${window.Vitta.escaparHtml(row.name)}</span><span class="table-secondary">${window.Vitta.escaparHtml(row.email || "Sem e-mail")}</span>` },
+          { label: "CPF", renderizar: (row) => window.Vitta.escaparHtml(row.cpf) },
+          { label: "Telefone", renderizar: (row) => window.Vitta.escaparHtml(row.phone || "—") },
+          { label: "Convênio", renderizar: (row) => window.Vitta.escaparHtml(row.insurance || "—") }
         ],
         rows,
-        actions: writable ? (row) => `<button type="button" class="button button-secondary button-small" data-edit="${window.Vitta.escape(row.id)}">Editar</button><button type="button" class="button button-danger button-small" data-delete="${window.Vitta.escape(row.id)}">Excluir</button>` : null
+        actions: writable ? (row) => `<button type="button" class="button button-secondary button-small" data-edit="${window.Vitta.escaparHtml(row.id)}">Editar</button><button type="button" class="button button-danger button-small" data-delete="${window.Vitta.escaparHtml(row.id)}">Excluir</button>` : null
       });
       if (writable) {
-        document.querySelector("[data-add]").addEventListener("click", () => editPatient());
-        card.querySelectorAll("[data-edit]").forEach((button) => button.addEventListener("click", () => editPatient(window.VittaStorage.all("patients").find((item) => item.id === button.dataset.edit))));
+        document.querySelector("[data-add]").addEventListener("click", () => editarPaciente());
+        card.querySelectorAll("[data-edit]").forEach((button) => button.addEventListener("click", () => editarPaciente(window.VittaStorage.all("patients").find((item) => item.id === button.dataset.edit))));
         card.querySelectorAll("[data-delete]").forEach((button) => button.addEventListener("click", () => {
           const patient = window.VittaStorage.all("patients").find((item) => item.id === button.dataset.delete);
           const linked = window.VittaStorage.all("appointments").some((item) => item.patientId === patient.id) || window.VittaStorage.all("records").some((item) => item.patientId === patient.id);
           if (linked) {
-            window.Vitta.confirm({ title: "Excluir paciente?", message: `O paciente ${patient.name} possui consultas ou prontuários vinculados. Excluir ainda assim poderá deixar esses registros sem vínculo.`, onConfirm: () => removePatient(patient.id) });
-          } else window.Vitta.confirm({ title: "Excluir paciente?", message: `Deseja excluir ${patient.name}? Esta ação não pode ser desfeita.`, onConfirm: () => removePatient(patient.id) });
+            window.Vitta.confirm({ title: "Excluir paciente?", message: `O paciente ${patient.name} possui consultas ou prontuários vinculados. Excluir ainda assim poderá deixar esses registros sem vínculo.`, onConfirm: () => removerPaciente(patient.id) });
+          } else window.Vitta.confirm({ title: "Excluir paciente?", message: `Deseja excluir ${patient.name}? Esta ação não pode ser desfeita.`, onConfirm: () => removerPaciente(patient.id) });
         }));
       }
     };
-    function removePatient(id) {
-      window.VittaStorage.remove("patients", id);
-      window.Vitta.toast("Paciente excluído com sucesso.");
-      render();
+    function removerPaciente(id) {
+      return window.VittaStorage.remove("patients", id).then(() => {
+        window.Vitta.toast("Paciente excluído com sucesso.");
+        renderizar();
+      });
     }
-    function editPatient(patient) {
+    function editarPaciente(patient) {
       const editing = Boolean(patient);
       window.Vitta.modal({
         title: editing ? "Editar paciente" : "Novo paciente",
@@ -63,14 +64,15 @@
           if (duplicate) { window.Vitta.toast("Já existe um paciente cadastrado com este CPF.", "error"); return false; }
           const birth = new Date(form.birthDate + "T00:00:00");
           if (birth > new Date(window.Vitta.today() + "T23:59:59")) { window.Vitta.toast("A data de nascimento não pode estar no futuro.", "error"); return false; }
-          window.VittaStorage.save("patients", { ...(patient || {}), ...form, cpf, id: patient ? patient.id : window.Vitta.id("pac") });
-          window.Vitta.toast(editing ? "Cadastro atualizado." : "Paciente cadastrado.");
-          render();
+          return window.VittaStorage.save("patients", { ...(patient || {}), ...form, cpf, id: patient ? patient.id : window.Vitta.id("pac") }).then(() => {
+            window.Vitta.toast(editing ? "Cadastro atualizado." : "Paciente cadastrado.");
+            renderizar();
+          });
         }
       });
       const cpfInput = document.getElementById("field-cpf");
       cpfInput.addEventListener("input", () => { cpfInput.value = window.Vitta.cpfFormat(cpfInput.value); });
     }
-    render();
+    renderizar();
   };
 })();

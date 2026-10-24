@@ -1,1 +1,1 @@
-"""Shared API utilities."""
+"""Utilitários compartilhados da API."""
