@@ -2,7 +2,10 @@
 
 from pathlib import Path
 
+from dotenv import load_dotenv
 from flask_migrate import upgrade
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 from app import criar_aplicacao
 from app.dados_iniciais import popular_banco

@@ -8,12 +8,14 @@ from flask import Flask, abort, send_from_directory
 
 from app.configuracao import Configuracao
 from app.extensoes import bcrypt, cors, db, jwt, migrate
+from app.utils.criptografia import decodificar_chave
 from app.utils.erros import registrar_tratadores_de_erro
 
 
 def criar_aplicacao(config_object=Configuracao):
     app = Flask(__name__)
     app.config.from_object(config_object)
+    app.config["CHAVE_CIFRAGEM"] = decodificar_chave(app.config.get("DATA_ENCRYPTION_KEY"))
     os.makedirs(app.instance_path, exist_ok=True)
     diretorio_frontend = Path(__file__).resolve().parents[2]
 

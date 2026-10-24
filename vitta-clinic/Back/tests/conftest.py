@@ -11,6 +11,7 @@ class ConfiguracaoTeste:
     TESTING = True
     SECRET_KEY = "test-secret-key-that-is-at-least-32-bytes"
     JWT_SECRET_KEY = "test-jwt-secret-key-that-is-at-least-32-bytes"
+    DATA_ENCRYPTION_KEY = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CORS_ORIGINS = ["http://localhost"]

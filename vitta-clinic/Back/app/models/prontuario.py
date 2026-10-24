@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from app.extensoes import db
+from app.utils.criptografia import TextoCriptografado
 
 
 class Prontuario(db.Model):
@@ -13,10 +14,10 @@ class Prontuario(db.Model):
     appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id"), nullable=False, unique=True)
     doctor_id = db.Column(db.Integer, db.ForeignKey("doctors.id"), nullable=False)
     record_date = db.Column(db.Date, nullable=False)
-    complaint = db.Column(db.Text, nullable=False)
-    diagnosis = db.Column(db.Text, nullable=False)
-    prescription = db.Column(db.Text)
-    notes = db.Column(db.Text)
+    complaint = db.Column(TextoCriptografado("medical_records.complaint"), nullable=False)
+    diagnosis = db.Column(TextoCriptografado("medical_records.diagnosis"), nullable=False)
+    prescription = db.Column(TextoCriptografado("medical_records.prescription"))
+    notes = db.Column(TextoCriptografado("medical_records.notes"))
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     patient = db.relationship("Paciente", back_populates="records")

@@ -1,6 +1,7 @@
 """Perfis médicos, opcionalmente associados a uma conta de acesso."""
 
 from app.extensoes import db
+from app.utils.criptografia import TextoCriptografado
 from app.utils.validadores import normalizar_crm
 
 
@@ -12,8 +13,8 @@ class Medico(db.Model):
     specialty_id = db.Column(db.Integer, db.ForeignKey("specialties.id"), nullable=False)
     name = db.Column(db.String(160), nullable=False, index=True)
     crm = db.Column(db.String(12), nullable=False, unique=True, index=True)
-    email = db.Column(db.String(254), nullable=False)
-    phone = db.Column(db.String(32), nullable=False)
+    email = db.Column(TextoCriptografado("doctors.email"), nullable=False)
+    phone = db.Column(TextoCriptografado("doctors.phone"), nullable=False)
     schedule = db.Column(db.String(200))
     active = db.Column(db.Boolean, nullable=False, default=True)
 

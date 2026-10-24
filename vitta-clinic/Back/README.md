@@ -11,12 +11,23 @@ cd Back
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+.\.venv\Scripts\python.exe -c "import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"
+notepad .env
+```
+
+Cole o valor gerado na linha `DATA_ENCRYPTION_KEY=` do `.env`, salve o arquivo e inicie o projeto:
+
+```powershell
 .\.venv\Scripts\python.exe executar.py
 ```
 
 O script aplica as migrações pendentes, cria dados de demonstração se o banco estiver vazio e inicia o site e a API em `http://127.0.0.1:5000`. A interface e a API usam o mesmo endereço; o health check é `GET /health`. O banco padrão é SQLite em `instance/vitta_clinic.db`.
 
+Mantenha a chave em segredo e guarde uma cópia de segurança separada do banco: sem ela, os campos criptografados não podem ser recuperados. A chave deve permanecer igual entre reinicializações. Faça uma cópia de segurança do banco antes da primeira inicialização com a migração de criptografia, que cifra dados sensíveis já existentes.
+
 Para reinicializar os dados de desenvolvimento, pare o servidor e remova `instance/vitta_clinic.db`; ao iniciar novamente, as migrações serão aplicadas e os dados de demonstração serão criados outra vez. Não reutilize as chaves de `.env.example` em produção.
+
+Os campos pessoais e clínicos cifrados usam AES-256-GCM com nonce aleatório e verificação de integridade. Campos usados em buscas, índices e restrições de unicidade permanecem sem criptografia nesta camada para preservar o comportamento atual.
 
 ## Contas de demonstração
 
@@ -123,10 +134,11 @@ Listagens aceitam filtros: pacientes `search`; médicos `search` e `specialty_id
 ## Testes
 
 ```powershell
+# Execute dentro da pasta Back
 python -m pytest -q
 ```
 
-Os testes usam SQLite em memória e cobrem autenticação/perfis, CPF, soft delete, datas e conflitos da agenda, e as regras de prontuário. Para aplicar alterações de modelo após o início do projeto, execute `flask --app executar.py db migrate -m "Descrição"` e `flask --app executar.py db upgrade`.
+Também é possível executar o comando da raiz de `vitta-clinic` com `python -m pytest Back\tests -q`. A configuração do pytest inclui a pasta `Back` no caminho de importação da aplicação. Os testes usam SQLite em memória e cobrem autenticação/perfis, CPF, soft delete, datas e conflitos da agenda, e as regras de prontuário. Para aplicar alterações de modelo após o início do projeto, execute `flask --app executar.py db migrate -m "Descrição"` e `flask --app executar.py db upgrade`.
 
 ## Estrutura de pastas
 

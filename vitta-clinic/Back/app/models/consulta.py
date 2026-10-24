@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 from app.extensoes import db
+from app.utils.criptografia import TextoCriptografado
 from sqlalchemy import Index, text
 
 
@@ -42,7 +43,7 @@ class Consulta(db.Model):
     appointment_date = db.Column(db.Date, nullable=False, index=True)
     appointment_time = db.Column(db.Time, nullable=False)
     status = db.Column(db.Enum(StatusConsulta, values_callable=lambda enum: [item.value for item in enum]), nullable=False, default=StatusConsulta.AGENDADA)
-    notes = db.Column(db.Text)
+    notes = db.Column(TextoCriptografado("appointments.notes"))
 
     patient = db.relationship("Paciente", back_populates="appointments")
     doctor = db.relationship("Medico", back_populates="appointments")

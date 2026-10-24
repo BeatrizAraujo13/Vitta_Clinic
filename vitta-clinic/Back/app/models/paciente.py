@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 from app.extensoes import db
+from app.utils.criptografia import DataCriptografada, TextoCriptografado
 from app.utils.validadores import cpf_valido, normalizar_cpf
 
 
@@ -12,12 +13,12 @@ class Paciente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(160), nullable=False, index=True)
     cpf = db.Column(db.String(11), nullable=False, unique=True, index=True)
-    birth_date = db.Column(db.Date, nullable=False)
-    phone = db.Column(db.String(32), nullable=False)
-    email = db.Column(db.String(254))
-    address = db.Column(db.String(300))
-    insurance = db.Column(db.String(120))
-    notes = db.Column(db.Text)
+    birth_date = db.Column(DataCriptografada("patients.birth_date"), nullable=False)
+    phone = db.Column(TextoCriptografado("patients.phone"), nullable=False)
+    email = db.Column(TextoCriptografado("patients.email"))
+    address = db.Column(TextoCriptografado("patients.address"))
+    insurance = db.Column(TextoCriptografado("patients.insurance"))
+    notes = db.Column(TextoCriptografado("patients.notes"))
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     deleted_at = db.Column(db.DateTime(timezone=True))
 
